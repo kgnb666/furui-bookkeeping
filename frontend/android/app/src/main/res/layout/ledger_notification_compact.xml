@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  收起状态下的紧凑布局。
+  系统给收起态的高度有限，放不下完整五行，所以这里只留两行 + 进度条，
+  完整信息在展开态（ledger_notification.xml）里。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ledger_root_compact"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/ledger_compact_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/ledger_text"
+        android:text="🟢 预算充足 · 已用 0%" />
+
+    <TextView
+        android:id="@+id/ledger_compact_line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/ledger_text_sub"
+        android:text="今日支 ¥0.00 · 收 ¥0.00 · 余 ¥0.00" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp">
+
+        <ProgressBar
+            android:id="@+id/ledger_cbar_ok"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/ledger_ok"
+            android:progressBackgroundTint="#33000000" />
+
+        <ProgressBar
+            android:id="@+id/ledger_cbar_warn"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/ledger_warn"
+            android:progressBackgroundTint="#33000000"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/ledger_cbar_danger"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/ledger_danger"
+            android:progressBackgroundTint="#33000000"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

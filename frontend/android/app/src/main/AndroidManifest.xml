@@ -2,6 +2,12 @@
     <!-- release 包必须显式声明联网权限：Flutter 模板只在 debug/profile 的 manifest 里加了它，
          缺少这一行时正式版 APK 无法发起任何 HTTP 请求（登录会直接失败）。 -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 常驻通知：Android 13(API 33) 起发通知需要运行时授权，由「我的」页面的开关触发申请。
+         后台刷新用 WorkManager 完成，不需要前台服务权限，因此不受 Android 15 起
+         dataSync 前台服务「每 24 小时最多 6 小时」的限制。 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- 重启后重新安排通知刷新（AlarmManager 的闹钟在重启后会丢失） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="福瑞记账"
         android:usesCleartextTraffic="true"
@@ -34,6 +40,20 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- 常驻通知的后台刷新：AlarmManager 定时触发，不对外暴露 -->
+        <receiver
+            android:name=".LedgerRefreshReceiver"
+            android:exported="false" />
+
+        <!-- 开机后重新安排刷新；只接收系统广播 -->
+        <receiver
+            android:name=".LedgerBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

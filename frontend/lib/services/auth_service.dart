@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:campus_ledger/models/user.dart';
 import 'package:campus_ledger/services/api_client.dart';
+import 'package:campus_ledger/services/ledger_notification_service.dart';
 
 /// 登录状态与用户资料。token 存在 shared_preferences 里。
 class AuthService {
@@ -43,6 +44,8 @@ class AuthService {
     final user = User.fromJson(data['user'] as Map<String, dynamic>);
     currentUser = user;
     await _save(user);
+    // 用户之前开过通知栏看板的话，用新 token 重新挂上（失败不影响登录）
+    await LedgerNotificationService.onLogin();
     return user;
   }
 
@@ -96,6 +99,8 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    // 先收起常驻通知，避免退出后仍显示上一个账号的金额
+    await LedgerNotificationService.onLogout();
     ApiClient.token = null;
     currentUser = null;
     final prefs = await SharedPreferences.getInstance();

@@ -4,6 +4,7 @@ import 'package:campus_ledger/pages/bill_list_page.dart';
 import 'package:campus_ledger/pages/home_page.dart';
 import 'package:campus_ledger/pages/profile_page.dart';
 import 'package:campus_ledger/pages/statistics_page.dart';
+import 'package:campus_ledger/services/ledger_notification_service.dart';
 
 /// 底部导航：首页 / 账单 / 统计 / 我的
 class MainShellPage extends StatefulWidget {
@@ -13,7 +14,7 @@ class MainShellPage extends StatefulWidget {
   State<MainShellPage> createState() => _MainShellPageState();
 }
 
-class _MainShellPageState extends State<MainShellPage> {
+class _MainShellPageState extends State<MainShellPage> with WidgetsBindingObserver {
   int _index = 0;
 
   // 切换到某个页签时通知对应页面刷新数据，避免看到过期内容
@@ -23,7 +24,23 @@ class _MainShellPageState extends State<MainShellPage> {
   final ValueNotifier<int> _statisticsRefresh = ValueNotifier<int>(0);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// 从后台切回前台时立刻刷新一次通知栏看板，
+  /// 免得用户下拉通知栏看到的是上一次的数字。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      LedgerNotificationService.refresh();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _homeRefresh.dispose();
     _billRefresh.dispose();
     _statisticsRefresh.dispose();

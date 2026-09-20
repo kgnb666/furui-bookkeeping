@@ -8,6 +8,7 @@ import 'package:campus_ledger/pages/export_page.dart';
 import 'package:campus_ledger/pages/import_history_page.dart';
 import 'package:campus_ledger/pages/login_page.dart';
 import 'package:campus_ledger/services/auth_service.dart';
+import 'package:campus_ledger/services/ledger_notification_service.dart';
 import 'package:campus_ledger/utils/brand.dart';
 
 /// 我的：资料、修改密码、导入记录、关于、退出登录
@@ -23,11 +24,51 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading = true;
   String? _error;
 
+  /// 通知栏常驻看板的开关状态
+  bool _notificationOn = false;
+  bool _notificationBusy = false;
+
   @override
   void initState() {
     super.initState();
     _user = AuthService.currentUser;
     _load();
+    _loadNotificationState();
+  }
+
+  Future<void> _loadNotificationState() async {
+    final on = await LedgerNotificationService.isEnabled();
+    if (!mounted) return;
+    setState(() => _notificationOn = on);
+  }
+
+  /// 开关通知栏看板。
+  /// 开启时会申请通知权限（Android 13+），被拒绝就把开关退回关闭状态并给出提示。
+  Future<void> _toggleNotification(bool value) async {
+    setState(() => _notificationBusy = true);
+
+    final granted = value ? await LedgerNotificationService.enable() : false;
+    if (!value) {
+      await LedgerNotificationService.disable();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _notificationOn = value && granted;
+      _notificationBusy = false;
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+    if (value && !granted) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('需要通知权限才能显示看板，请在系统设置里允许「福瑞记账」发送通知'),
+      ));
+    } else if (value) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('已开启，下拉通知栏即可看到。小米 / 华为等机型建议在系统设置里允许自启动，否则后台刷新会被系统限制'),
+        duration: Duration(seconds: 6),
+      ));
+    }
   }
 
   Future<void> _load() async {
@@ -208,6 +249,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       MaterialPageRoute(builder: (_) => const ExportPage()),
                     ),
                   ),
+                  // 通知栏常驻看板只在 Android 上有（依赖系统 NotificationManager）
+                  if (LedgerNotificationService.isSupported) ...[
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: const Icon(Icons.notifications_active_outlined),
+                      title: const Text('通知栏看板'),
+                      subtitle: const Text('常驻显示今日开支、本月预算与结余'),
+                      value: _notificationOn,
+                      onChanged: _notificationBusy ? null : _toggleNotification,
+                    ),
+                  ],
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.info_outline),

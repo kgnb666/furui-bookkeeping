@@ -6,4 +6,11 @@
     <color name="brand_green">#2E7D6F</color>
     <!-- 自适应图标背景色，由 flutter_launcher_icons 的 adaptive_icon_background 生成 -->
     <color name="ic_launcher_background">#FFF6E8</color>
+
+    <!-- 常驻通知配色：与 Dart 侧 Brand 保持一致（green/orange/expense） -->
+    <color name="ledger_ok">#2E9E6B</color>
+    <color name="ledger_warn">#F5A524</color>
+    <color name="ledger_danger">#D64545</color>
+    <color name="ledger_text">#2B2B2B</color>
+    <color name="ledger_text_sub">#6B6B6B</color>
 </resources>

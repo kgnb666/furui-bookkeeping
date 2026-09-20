@@ -19,6 +19,10 @@ class ApiClient {
   /// 运行时覆盖接口地址，默认使用 ApiConfig 里的环境配置
   static String? _baseUrlOverride;
 
+  /// 当前生效的接口地址。
+  /// 原生侧的常驻通知刷新是脱离 Flutter 引擎跑的，需要知道自己该请求哪个地址。
+  static String get effectiveBaseUrl => _baseUrlOverride ?? ApiConfig.baseUrl;
+
   static void overrideBaseUrl(String? baseUrl) {
     _baseUrlOverride = baseUrl;
   }
