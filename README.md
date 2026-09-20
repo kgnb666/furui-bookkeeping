@@ -720,7 +720,7 @@ flutter build apk --release --dart-define=API_ENV=lan
 > 也可以不依赖局域网，直接把接口指向已部署的服务器（手机用 4G / 5G 或任意 Wi-Fi 都能用）：
 >
 > ```bash
-> flutter build apk --release --dart-define=API_BASE_URL=http://8.138.161.154:8090/api
+> flutter build apk --release --dart-define=API_BASE_URL=http://129.204.61.68/api
 > ```
 
 为 Android 做的配置（都在 `frontend/android/` 内，不影响其它平台）：
@@ -1229,12 +1229,12 @@ Stage 4-G 用构造账号核对过收支结余接口：本月收入 3000（生�
 
 | 项 | 值 |
 | --- | --- |
-| 服务器 | `8.138.161.154`（阿里云，与已有的 docwise / codepilot 等应用共用，互不影响） |
-| 项目目录 | `/root/campus-ledger` |
-| 对外端口 | **8090** → 容器内 Nginx 80 |
-| 访问地址 | `http://8.138.161.154:8090` |
+| 服务器 | `129.204.61.68`（腾讯云轻量应用服务器，Ubuntu 24.04） |
+| 项目目录 | `/home/ubuntu/campus-ledger` |
+| 对外端口 | **80** → 容器内 Nginx 80 |
+| 访问地址 | `http://129.204.61.68` |
 | 容器 | `campus-ledger-mysql`（数据持久化在命名卷）、`campus-ledger-backend`、`campus-ledger-web` |
-| 演示账号 | `demo / 123456`（已导入样例账单与预算）、`demo2 / 123456`（用于演示数据隔离） |
+| 演示账号 | `demo_furui / 123456`（已导入 6 个自然月的演示账单与预算，8 个智能接口均可返回 OK） |
 
 线上页面（实测可访问，截图见 `docs/screenshots/10-deployed-login.png`）：
 
@@ -1243,9 +1243,14 @@ Stage 4-G 用构造账号核对过收支结余接口：本月收入 3000（生�
 外网验证结果：首页 HTTP 200、`/api/health` 200、外网登录与账单/统计/预算/导入历史读取正常、
 外网上传账单文件导入成功（multipart）、越权访问返回 404。
 
-> **首次访问前需要在阿里云控制台放行端口**：实例安全组 → 入方向 → 添加规则
-> （协议 TCP、端口范围 `8090/8090`、授权对象 `0.0.0.0/0`）。
-> 服务器上的 `ufw` 已经放行了 8090，剩下的只有安全组这一层。
+> **关于端口**：腾讯云安全组默认放行 22 与 80，本项目直接使用 80 端口，
+> 不需要额外放行。这也是从 8090 迁到 80 的原因之一：8090 需要单独在安全组加规则，
+> 而**跨域校验会因此失败**——Nginx 的 `proxy_set_header Host $host` 会丢掉端口号，
+> 后端误判自己在 80 端口，于是把 `Origin: http://<ip>:8090` 当成跨域请求并返回
+> `403 Invalid CORS request`，浏览器上表现为登录时提示"没有权限访问该数据"。
+>
+> 更早的阿里云实例（`8.138.161.154:8090`）已于 2026-09-20 停止，
+> 它的容器仍保留在服务器上，需要时可 `docker compose start` 恢复。
 
 ### 9.2 重新部署 / 更新
 
@@ -1261,7 +1266,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\docwise-deplo
 
 ```bash
 cd frontend
-flutter build web --dart-define=API_BASE_URL=http://8.138.161.154:8090/api
+flutter build web --dart-define=API_BASE_URL=http://129.204.61.68/api
 cd ../backend
 mvn clean package
 ```
@@ -1274,14 +1279,14 @@ mvn clean package
 ### 9.3 服务器上常用命令
 
 ```bash
-ssh -i ~/.ssh/english_app_bt root@8.138.161.154
+ssh -i ~/.ssh/english_app_bt ubuntu@129.204.61.68
 
-cd /root/campus-ledger
-docker compose ps                      # 查看容器状态
-docker compose logs -f backend         # 后端日志
-docker compose restart backend         # 重启后端
-curl http://localhost:8090/api/health  # 健康检查（应返回 {"code":0,...}）
-docker compose down                    # 停止整套服务（数据卷保留）
+cd /home/ubuntu/campus-ledger
+sudo docker compose ps                      # 查看容器状态
+sudo docker compose logs -f backend         # 后端日志
+sudo docker compose restart backend         # 重启后端
+curl http://localhost/api/health            # 健康检查（应返回 {"code":0,...}）
+sudo docker compose stop                    # 停止整套服务（数据卷保留）
 ```
 
 ### 9.4 自建服务器部署（通用步骤）
@@ -1401,6 +1406,9 @@ server {
 | 一致性 | 真机页面上的金额（本月支出 ¥214.00 / 收入 ¥500.00 / 结余 ¥286.00 / 结余率 57.2%）与直接调用线上接口返回的数字**逐字一致** |
 | 接口证据 | 修复前服务器 10 分钟 **0 条 SQL**；修复后同一时间窗 **76 条 SQL**，证明请求确实来自真机 |
 | 截图 | `docs/screenshots_phone/`（14 张真机截图） |
+
+> 表中记录的接口地址是当时（2026-09-19）使用的阿里云实例。该实例已于 2026-09-20 停止，
+> 安装包与部署地址均已迁移到 `http://129.204.61.68`（见第九节），本节保留当时的原始记录。
 
 ### 13.2 本轮修复的缺陷（真机阻塞级）
 
