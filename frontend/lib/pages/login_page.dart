@@ -137,7 +137,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '演示账号：demo / 123456',
+                    // 与部署环境一致：种子脚本 tool/seed_demo_data.dart 创建的演示账号
+                    '演示账号：demo_furui / 123456',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
                   ),
