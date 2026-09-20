@@ -1,0 +1,35 @@
+{
+    "name": "福瑞记账 Furui Bookkeeping",
+    "short_name": "福瑞记账",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFF6E8",
+    "theme_color": "#F5A524",
+    "description": "福瑞记账 Furui Bookkeeping —— 记下每一笔，收获更好的自己。",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

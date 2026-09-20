@@ -1,0 +1,38 @@
+server:
+  port: 8080
+  tomcat:
+    # 上传超过大小限制时也要把响应正常返回给客户端，而不是直接断开连接
+    max-swallow-size: -1
+
+spring:
+  application:
+    name: campus-ledger
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:campus_ledger}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+ledger:
+  jwt:
+    # 生产环境请通过环境变量 JWT_SECRET 覆盖
+    secret: ${JWT_SECRET:campus-ledger-jwt-secret-key-2026-course-design}
+    expire-days: 7
+  import:
+    # 单次导入的最大记录数，超出时提示按月分批导入
+    max-records: 2000

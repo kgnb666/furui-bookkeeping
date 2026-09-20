@@ -1,0 +1,7 @@
+# 只把 Web 构建产物打进镜像，移动端/桌面端资料不需要
+android
+windows
+.dart_tool
+.idea
+build/app
+*.iml

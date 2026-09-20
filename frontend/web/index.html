@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="福瑞记账 Furui Bookkeeping —— 记下每一笔，收获更好的自己。">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="福瑞记账">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>福瑞记账</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!-- 福瑞记账启动画面：Flutter 引擎加载完成后会被首帧替换 -->
+  <div id="brand-splash">
+    <img src="icons/Icon-192.png" alt="福瑞记账" width="112" height="112">
+    <p class="brand-name">福瑞记账</p>
+    <p class="brand-slogan">记下每一笔 · 收获更好的自己</p>
+  </div>
+  <style>
+    #brand-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #FFF6E8;
+      font-family: "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+      z-index: 9999;
+    }
+    #brand-splash img {
+      border-radius: 26px;
+      box-shadow: 0 10px 28px rgba(214, 138, 24, 0.22);
+    }
+    #brand-splash .brand-name {
+      margin: 6px 0 0;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #C9761A;
+    }
+    #brand-splash .brand-slogan {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: #9A8571;
+    }
+  </style>
+  <script>
+    // Flutter 首帧渲染后移除启动画面
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('brand-splash');
+      if (splash) {
+        splash.style.transition = 'opacity .25s ease';
+        splash.style.opacity = '0';
+        setTimeout(function () { splash.remove(); }, 260);
+      }
+    });
+  </script>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

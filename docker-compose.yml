@@ -1,0 +1,56 @@
+# Campus Ledger 服务器部署编排：MySQL + Spring Boot 后端 + Nginx 前端
+# 说明：
+#   1. 只有 web 对外暴露端口，映射写成 "80:80"，部署脚本会按配置自动改成 "<对外端口>:80"；
+#   2. MySQL 只在容器网络内部访问（不映射到宿主机），数据存在命名卷里；
+#   3. 首次启动时用 sql/schema.sql 自动建库建表。
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: campus-ledger-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    volumes:
+      - campus-ledger-mysql-data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    container_name: campus-ledger-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    container_name: campus-ledger-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  campus-ledger-mysql-data:

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 福瑞记账品牌色：奶油白底 + 暖橙主色 + 账本绿 -->
+    <color name="brand_cream">#FFF6E8</color>
+    <color name="brand_orange">#F5A524</color>
+    <color name="brand_green">#2E7D6F</color>
+    <!-- 自适应图标背景色，由 flutter_launcher_icons 的 adaptive_icon_background 生成 -->
+    <color name="ic_launcher_background">#FFF6E8</color>
+</resources>
