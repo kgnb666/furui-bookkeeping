@@ -773,7 +773,7 @@ flutter build apk --release --dart-define=API_ENV=lan
 > 也可以不依赖局域网，直接把接口指向已部署的服务器（手机用 4G / 5G 或任意 Wi-Fi 都能用）：
 >
 > ```bash
-> flutter build apk --release --dart-define=API_BASE_URL=http://129.204.61.68/api
+> flutter build apk --release --dart-define=API_BASE_URL=https://ledger.myiskg.com/api
 > ```
 
 为 Android 做的配置（都在 `frontend/android/` 内，不影响其它平台）：
@@ -1283,10 +1283,10 @@ Stage 4-G 用构造账号核对过收支结余接口：本月收入 3000（生�
 | 项 | 值 |
 | --- | --- |
 | 服务器 | `129.204.61.68`（腾讯云轻量应用服务器，Ubuntu 24.04） |
+| **访问地址** | **`https://ledger.myiskg.com`** |
 | 项目目录 | `/home/ubuntu/campus-ledger` |
-| 对外端口 | **80** → 容器内 Nginx 80 |
-| 访问地址 | `http://129.204.61.68` |
-| 容器 | `campus-ledger-mysql`（数据持久化在命名卷）、`campus-ledger-backend`、`campus-ledger-web` |
+| 对外暴露方式 | 服务器上有统一入口容器 `myiskg-edge`（host 网络，占用宿主机 80 / 443），按 `Host` 头分发；`ledger.myiskg.com` → `127.0.0.1:8090` |
+| 容器 | `campus-ledger-mysql`（数据持久化在命名卷）、`campus-ledger-backend`、`campus-ledger-web`（仅监听 `127.0.0.1:8090`，不直接对外） |
 | 演示账号 | `demo_furui / 123456`（已导入 6 个自然月的演示账单与预算，8 个智能接口均可返回 OK） |
 
 线上页面（实测可访问，截图见 `docs/screenshots/10-deployed-login.png`）：
@@ -1296,11 +1296,18 @@ Stage 4-G 用构造账号核对过收支结余接口：本月收入 3000（生�
 外网验证结果：首页 HTTP 200、`/api/health` 200、外网登录与账单/统计/预算/导入历史读取正常、
 外网上传账单文件导入成功（multipart）、越权访问返回 404。
 
-> **关于端口**：腾讯云安全组默认放行 22 与 80，本项目直接使用 80 端口，
-> 不需要额外放行。这也是从 8090 迁到 80 的原因之一：8090 需要单独在安全组加规则，
-> 而**跨域校验会因此失败**——Nginx 的 `proxy_set_header Host $host` 会丢掉端口号，
-> 后端误判自己在 80 端口，于是把 `Origin: http://<ip>:8090` 当成跨域请求并返回
-> `403 Invalid CORS request`，浏览器上表现为登录时提示"没有权限访问该数据"。
+> ⚠️ **客户端里的接口地址必须写 `https://ledger.myiskg.com/api`，不要再写裸 IP。**
+>
+> 2026-09-24 起这台服务器改成了多项目统一入口：host 网络的 `myiskg-edge` 接管宿主机
+> 80 / 443，按 `Host` 头把各项目分发到各自的回环端口，并且**80 端口一律 301 跳转到 https**。
+> 因此：
+>
+> - `http://129.204.61.68/api/...` 会命中默认站点拿到 **301**，客户端不跟随重定向，
+>   界面上表现为「请求失败（301）」；
+> - 网页版由 https 页面请求 http 接口还会被浏览器按**混合内容**拦截。
+>
+> `ledger.myiskg.com` 用的是 Let's Encrypt 证书（SAN 覆盖 10 个主机名，含本域名），
+> 续期由 certbot 定时任务自动完成。
 >
 > 更早的阿里云实例（`8.138.161.154:8090`）已于 2026-09-20 停止，
 > 它的容器仍保留在服务器上，需要时可 `docker compose start` 恢复。
@@ -1319,7 +1326,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\docwise-deplo
 
 ```bash
 cd frontend
-flutter build web --dart-define=API_BASE_URL=http://129.204.61.68/api
+flutter build web --dart-define=API_BASE_URL=https://ledger.myiskg.com/api
 cd ../backend
 mvn clean package
 ```
@@ -1338,7 +1345,9 @@ cd /home/ubuntu/campus-ledger
 sudo docker compose ps                      # 查看容器状态
 sudo docker compose logs -f backend         # 后端日志
 sudo docker compose restart backend         # 重启后端
-curl http://localhost/api/health            # 健康检查（应返回 {"code":0,...}）
+# 健康检查：web 容器只监听回环的 8090，不直接对外
+curl http://127.0.0.1:8090/api/health       # 应返回 {"code":0,...}
+curl https://ledger.myiskg.com/api/health   # 走统一入口验证公网入口
 sudo docker compose stop                    # 停止整套服务（数据卷保留）
 ```
 
@@ -1462,7 +1471,9 @@ server {
 | 截图 | `docs/screenshots_phone/`（14 张真机截图） |
 
 > 表中记录的接口地址是当时（2026-09-19）使用的阿里云实例。该实例已于 2026-09-20 停止，
-> 安装包与部署地址均已迁移到 `http://129.204.61.68`（见第九节），本节保留当时的原始记录。
+> 上述地址（含 9 月 20 日所用的 `http://129.204.61.68`）均已失效：
+> 服务器在 2026-09-24 改为多项目统一入口，当前正式地址是 **`https://ledger.myiskg.com`**（见第九节）。
+> 本节保留当时的原始记录。
 
 ### 13.2 本轮修复的缺陷（真机阻塞级）
 
@@ -1493,3 +1504,19 @@ server {
 | 1 | release 包安装后**启动即崩** | 定时刷新最初用 WorkManager，release 构建的 R8 削掉了它依赖的 Room 生成类（`NoSuchMethodException: WorkDatabase_Impl.<init>`） | 改用系统自带的 `AlarmManager` 调度，**最终零新增依赖** |
 | 2 | 收起态装不下完整内容 | 系统给收起态的高度有限，四行文字加进度条会被截断 | 拆成两套布局：收起态两行 + 进度条，展开态完整五行 |
 | 3 | 通知被收进「更多通知」 | 小米 HyperOS 自行把它判定为不重要通知 | 渠道优先级 LOW / DEFAULT / HIGH 三档均实测，MIUI 一律收纳，属 ROM 行为；已按 DEFAULT 定稿并记入「已知限制」 |
+
+### 13.4 入口迁移导致客户端全部失效（2026-10-13）
+
+**现象**：手机上登录时提示「请求失败（301）」，网页版也打不开；服务器上的容器却都是 healthy。
+
+| 项 | 内容 |
+| --- | --- |
+| 报错 | 界面显示「请求失败（301）」——301 是 HTTP 重定向，前端只是把未知状态码原样透出，所以看不出真正原因 |
+| 根因 | 服务器在 **2026-09-24** 改造为多项目统一入口：host 网络的 `myiskg-edge` 接管宿主机 80 / 443，按 `Host` 头分发，且 **80 端口一律 301 跳 https**。项目地址由裸 IP 变成了 `https://ledger.myiskg.com`（→ `127.0.0.1:8090`），但 APK 与网页版里**编译死**的地址仍是旧的 `http://129.204.61.68/api` |
+| 为什么服务看着正常 | 后端、数据库、web 容器都没问题（本机 `127.0.0.1:8090` 返回 200），坏的只是客户端记着的入口地址 |
+| 网页版为何也挂 | 页面已由 https 提供，再去请求 http 接口会被浏览器按**混合内容**拦截 |
+| 修复 | 用 `--dart-define=API_BASE_URL=https://ledger.myiskg.com/api` 重新构建 Web 与 APK；Web 产物重新部署，APK 重新安装 |
+| 验证 | 服务器上 `https://ledger.myiskg.com/` 与 `/api/health` 均 200；登录接口 200 并能取到统计数据；新 APK 内只含 `https://ledger.myiskg.com/api` |
+
+**教训**：接口地址是编译进客户端的常量，一旦服务器入口变化，**所有已发布的客户端会同时失效**。
+入口若有调整，必须同步重建并重新分发 APK，Release 也要跟着出新版本。
